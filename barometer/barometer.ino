@@ -1,5 +1,4 @@
 #include <Adafruit_BMP280.h>
-
 /***************************************************************************
   This is a library for the BMP280 humidity, temperature & pressure sensor
 
@@ -18,8 +17,8 @@
  ***************************************************************************/
 
 #include <Wire.h>
-#include <SPI.h>
-#include <Adafruit_BMP280.h>
+//#include <SPI.h>
+//#include <Adafruit_BMP280.h>
 
 #define BMP_SCK  (13)
 #define BMP_MISO (12)
