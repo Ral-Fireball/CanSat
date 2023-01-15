@@ -88,9 +88,7 @@ void setup() {
 }
 
 void loop() {
-  temp = bmp.readTemperature();
-  press = bmp.readPressure();
-  alt = bmp.readAltitude(1013.25);  // hier moet ook de meting van nu bij. (dat zou al in de setup kunnen worden gekalibreerd) 
+   
   while (ss.available() > 0){
     gps.encode(ss.read());
     if (gps.location.isUpdated()){ 
@@ -100,18 +98,12 @@ void loop() {
       hour = gps.time.hour() + 1;
       min = gps.time.minute();
       sec = gps.time.second();
-      Serial.print(gps.location.lat(), 6);
-      Serial.print(",");
-      Serial.print(gps.location.lng(), 6);
-      Serial.print(" Time: ");
-      Serial.print(gps.time.hour() + 1);
-      Serial.print(":");
-      Serial.print(gps.time.minute());
-      Serial.print(":");
-      Serial.println(gps.time.second());
-      }
-  }
-  CO = analogRead(A0) * (max_volts / max_analog_steps);
+      } else{continue;}
+      temp = bmp.readTemperature();
+    press = bmp.readPressure();
+    alt = bmp.readAltitude(1013.25);  // hier moet ook de meting van nu bij. (dat zou al in de setup kunnen worden gekalibreerd)
+
+    CO = analogRead(A0) * (max_volts / max_analog_steps);
   NH3 = analogRead(A1) * (max_volts / max_analog_steps);
   NO2 = analogRead(A2) * (max_volts / max_analog_steps);
 
@@ -160,6 +152,11 @@ void loop() {
   Serial.print(press);
   Serial.print(" alt: ");
   Serial.println(alt);
+  }
+  
+
+
+  
 }
 
 // note: NO2, GPS, fijnstof en barometer gedaan
