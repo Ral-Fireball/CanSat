@@ -35,7 +35,7 @@ void setup() {
   Serial.println(F("BMP280 test"));
   unsigned status;
   //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
-  status = bmp.begin();
+  status = bmp.begin(0x76);
   if (!status) {
     Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
                       "try a different address!"));
