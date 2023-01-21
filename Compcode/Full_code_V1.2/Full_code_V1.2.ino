@@ -4,13 +4,7 @@
 #include <SoftwareSerial.h>  // komt uit gps
 #include <TinyGPS++.h>  // voor gps
 
-#define BMP_SCK  (13)
-#define BMP_MISO (12)
-#define BMP_MOSI (11)
-#define BMP_CS   (10)
 Adafruit_BMP280 bmp; // I2C
-//Adafruit_BMP280 bmp(BMP_CS); // hardware SPI
-//Adafruit_BMP280 bmp(BMP_CS, BMP_MOSI, BMP_MISO,  BMP_SCK);
 
 static const int RXPin = 4, TXPin = 3;
 static const uint32_t GPSBaud = 9600;
@@ -57,10 +51,11 @@ void setup() {
   pinMode(A0, INPUT);
   pinMode(7, INPUT);  // pin voor ozon
 
+  radio.begin(9600);  // start de radio!
   ss.begin(GPSBaud);  // om te communiceren met GPS
 
   Serial.begin(9600);
-  radio.begin(9600);  // start de radio!
+  
 
   while ( !Serial ) delay(100);   // wait for native usb
 
@@ -68,18 +63,12 @@ void setup() {
   radio.println(F("CanSat code!"));  // eerste test print
 
   unsigned status;  // geen idee wat dit is
-  //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
   status = bmp.begin();  // init voor de barometer
   if (!status) {  // debug voor barometer
     radio.println(F("Could not find a valid BMP280 sensor, check wiring or "
                       "try a different address!"));
     radio.print("SensorID was: 0x");
     radio.println(bmp.sensorID(),16);
-    radio.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-    radio.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-    radio.print("        ID of 0x60 represents a BME 280.\n");
-    radio.print("        ID of 0x61 represents a BME 680.\n");
-    while (1) delay(10);
   } 
 
   /* Default settings from datasheet. */
@@ -102,69 +91,73 @@ void loop() {
       min = gps.time.minute();
       sec = gps.time.second();
       } else{continue;}
-    temp = bmp.readTemperature();
-    press = bmp.readPressure();
-    alt = bmp.readAltitude(1013.25);  // hier moet ook de meting van nu bij. (dat zou al in de setup kunnen worden gekalibreerd)
-
-    CO = analogRead(A0) * (max_volts / max_analog_steps);
-    NH3 = analogRead(A1) * (max_volts / max_analog_steps);
-    NO2 = analogRead(A2) * (max_volts / max_analog_steps);
-
-    digitalWrite(ledPower,LOW);  // vanaf hier pm
-    delayMicroseconds(280);
-
-    voMeasured = analogRead(measurePin);
-
-    delayMicroseconds(40);
-    digitalWrite(ledPower,HIGH);
-    delayMicroseconds(9680);
-
-    calcVoltage = voMeasured*(5.0/1024);
-    dustDensity = 0.17*calcVoltage-0.1;
-
-    if ( dustDensity < 0)
-    {
-      dustDensity = 0.00;
-    }// tot hier pm
-
-    O3 = analogRead(O3_pin) * (max_volts / max_analog_steps);
+    
 
     Serial.print("test");
-
-    radio.print("O3 concentration (ppm): ");
-    radio.println(O3);
-    radio.print(lat, 6);
-    radio.print(" lng: ");
-    radio.print(lng, 6);
-    radio.print(" H; ");
-    radio.print(hour);
-    radio.print(" m: ");
-    radio.print(min);
-    radio.print(" s: ");
-    radio.print(sec);
-    radio.print(" co: ");
-    radio.print(CO, 4);
-    radio.print(" nh3: ");
-    radio.print(NH3, 4);
-    radio.print(" no2: ");
-    radio.print(NO2, 4);
-    radio.print(" o3: ");
-    radio.print(O3, 4);
-    radio.print(" pm: ");
-    radio.println(dustDensity);
-    radio.print(" temp: ");
-    radio.print(temp);
-    radio.print(" press: ");
-    radio.print(press);
-    radio.print(" alt: ");
-    radio.println(alt);
+    readSensors();
+    radioSend();
   }
-  
-
-
-  
+  if (!((ss.available() > 0))){
+    radio.println("GEEN GPS");
+    readSensors();
+    radioSend();
+  }
 }
 
-// note: NO2, GPS, fijnstof en barometer gedaan
-// werkend inc wire: NO2, Fijnstof
-// TODO: onzon, telecommunicatie
+void readSensors(){
+  temp = bmp.readTemperature();
+  press = bmp.readPressure();
+  alt = bmp.readAltitude(1013.25);  // hier moet ook de meting van nu bij. (dat zou al in de setup kunnen worden gekalibreerd)
+
+  CO = analogRead(A0) * (max_volts / max_analog_steps);
+  NH3 = analogRead(A1) * (max_volts / max_analog_steps);
+  NO2 = analogRead(A2) * (max_volts / max_analog_steps);
+
+  digitalWrite(ledPower,LOW);  // vanaf hier pm
+  delayMicroseconds(280);
+
+  voMeasured = analogRead(measurePin);
+
+  delayMicroseconds(40);
+  digitalWrite(ledPower,HIGH);
+  delayMicroseconds(9680);
+
+  calcVoltage = voMeasured*(5.0/1024);
+  dustDensity = 0.17*calcVoltage-0.1;
+
+  if ( dustDensity < 0){
+    dustDensity = 0.00;
+  }// tot hier pm
+
+  O3 = analogRead(O3_pin) * (max_volts / max_analog_steps);
+}
+
+void radioSend(){
+  radio.print("O3 concentration (ppm): ");
+  radio.println(O3);
+  radio.print(lat, 6);
+  radio.print(" lng: ");
+  radio.print(lng, 6);
+  radio.print(" H; ");
+  radio.print(hour);
+  radio.print(" m: ");
+  radio.print(min);
+  radio.print(" s: ");
+  radio.print(sec);
+  radio.print(" co: ");
+  radio.print(CO, 4);
+  radio.print(" nh3: ");
+  radio.print(NH3, 4);
+  radio.print(" no2: ");
+  radio.print(NO2, 4);
+  radio.print(" o3: ");
+  radio.print(O3, 4);
+  radio.print(" pm: ");
+  radio.println(dustDensity);
+  radio.print(" temp: ");
+  radio.print(temp);
+  radio.print(" press: ");
+  radio.print(press);
+  radio.print(" alt: ");
+  radio.println(alt);
+}
