@@ -7,8 +7,7 @@ void setup()
   SUART.begin(9600);
 }
 
-void loop()
-{
+void loop(){
   byte n = SUART.available(); //check if a character has arrived via SUART Port
   if (n != 0) //a charctaer has arrived; it has been auto saved in FIFO; say 1 as 0x31
   {
