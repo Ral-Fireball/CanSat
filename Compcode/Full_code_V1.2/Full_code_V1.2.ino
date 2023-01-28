@@ -20,7 +20,8 @@ double lat;
 double lng;
 int hour;
 int min;
-int sec; // variabelen voor gemeten waarde GPS
+int sec;
+bool GPSUpdate;// variabelen voor gemeten waarde GPS
 
 float CO;
 float NH3;
@@ -35,6 +36,9 @@ float dustDensity = 0;  // variabelen voor de pm sensor
 int O3_pin = A3;
 float O3;
 
+float last_alt;
+float new_alt;
+
 TinyGPSPlus gps;
 
 SoftwareSerial ss(RXPin, TXPin);
@@ -42,30 +46,29 @@ SoftwareSerial ss(RXPin, TXPin);
 SoftwareSerial radio(8, 9);  // serial voor de radio
 void getGPS(){
   //Serial.println("GPS interupt");  // debug print
-  for (int i = 0; i<50; i++){
-    while ((ss.available() > 0)){
-      int c = gps.encode(ss.read());
-      if (c){
-        //Serial.println("GPS read");  // debug print
-        lat = gps.location.lat();
-        lng = gps.location.lng();
-        hour = gps.time.hour() + 1;
-        min = gps.time.minute();
-        sec = gps.time.second();
-        /*radio.print(lat);
-        radio.print("  ");
-        radio.print(lng);
-        radio.print("  ");
-        radio.print(hour);
-        radio.print("  ");
-        radio.print(min);
-        radio.print("  ");
-        radio.print(sec);*/ // debug prints
-        return;
-      }
+  while ((ss.available() > 0) && (!GPSUpdate)){
+    int c = gps.encode(ss.read());
+    if (c){
+      //Serial.println("GPS read");  // debug print
+      lat = gps.location.lat();
+      lng = gps.location.lng();
+      hour = gps.time.hour() + 1;
+      min = gps.time.minute();
+      sec = gps.time.second();
+      /*radio.print(lat);
+      radio.print("  ");
+      radio.print(lng);
+      radio.print("  ");
+      radio.print(hour);
+      radio.print("  ");
+      radio.print(min);
+      radio.print("  ");
+      radio.print(sec);*/ // debug prints
+      GPSUpdate = true;
     }
-    delay(10);
-  }  
+  }
+  
+ 
 }
 
 void readSensors(){
@@ -98,6 +101,8 @@ void readSensors(){
 
 void radioSend(){
   // volgorde = lat, lng, hour, min, sec, co, nh3, no2, o3, pm, temp, press, alt
+  radio.print(GPSUpdate);
+  radio.print(", ");
   radio.print(lat, 6);
   radio.print(", ");
   radio.print(lng, 6);
@@ -166,18 +171,37 @@ void setup() {
                   Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
   
 }
+bool checkAlt(){
+  last_alt = new_alt;
+  new_alt = accurateAlt();
+  if ((last_alt - new_alt) < (-7)){return true;}  // EN als imu basicly 0 meet.
+  else{return false;}
+}
+float accurateAlt(){
+  const int n =5;
+  float alt_gem;
+  for (int i = 0; i>n; i++){
+    alt_gem += bmp.readAltitude(1013.25);
+  }
+  alt_gem = alt_gem/n;
+  return alt_gem;
+}
 
 void loop() {
   if(ss.available()){
-    getGPS();
-    readSensors();
-    radioSend();
+    for (int i = 0; i<50; i++){  // Wat is de minimum? altitude moet ook gecheckt.
+      getGPS();
+      delay(10);
+      if (GPSUpdate){break;}
+    }
+    GPSUpdate = false;
   } 
   if (!((ss.available() > 0))){
-    radio.println("GEEN GPS");
-    readSensors();
-    radioSend();
+    GPSUpdate = false;
   }
+  checkAlt();
+  readSensors();
+  radioSend();
 }
 
 

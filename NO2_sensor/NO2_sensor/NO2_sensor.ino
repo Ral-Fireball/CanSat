@@ -19,12 +19,11 @@ void loop()
   int a2_read = analogRead(A2);
   Serial.print("CO (a0): ");
   Serial.println(a0_read * (max_volts / max_analog_steps));
-  delay(1000);
   Serial.print("NH3 (a1): ");
   Serial.println(a1_read * (max_volts / max_analog_steps));
   Serial.print("NO2 (a2): ");
   Serial.println(a2_read * (max_volts / max_analog_steps));
   
 
-  delay(3000);
+  delay(500);
 }
