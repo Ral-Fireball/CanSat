@@ -12,6 +12,6 @@ void loop(){
   if (n != 0) //a charctaer has arrived; it has been auto saved in FIFO; say 1 as 0x31
   {
     char x = SUART.read(); //read arrived character from FIFO (say 1) and put into x as 0x31 
-    Serial.println(x);  //send 0x31 to Serial Monitor to show 1 via UART Port
+    Serial.print(x);  //send 0x31 to Serial Monitor to show 1 via UART Port
   }
 }

@@ -12,17 +12,19 @@ void setup()
   pinMode(A2, INPUT);
 }
 
+
+
 void loop() 
 {
   int a0_read = analogRead(A0);
   int a1_read = analogRead(A1);
   int a2_read = analogRead(A2);
   Serial.print("CO (a0): ");
-  Serial.println(a0_read * (max_volts / max_analog_steps));
+  Serial.println(a0_read * (max_volts / (max_analog_steps * 80)));
   Serial.print("NH3 (a1): ");
-  Serial.println(a1_read * (max_volts / max_analog_steps));
+  Serial.println(a1_read * (max_volts / (max_analog_steps * 60)));
   Serial.print("NO2 (a2): ");
-  Serial.println(a2_read * (max_volts / max_analog_steps));
+  Serial.println(a2_read* (max_volts / (max_analog_steps * 80)));
   
 
   delay(500);

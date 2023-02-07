@@ -1,10 +1,13 @@
 #include <Adafruit_BMP280.h>
 #include <Wire.h>
+#include <Servo.h>
 
 Adafruit_BMP280 bmp; // I2C
 float last_alt;
 float new_alt;
 float dalt;
+
+Servo release;
 
 float accurateAlt(){
   const int n = 10;
@@ -17,10 +20,16 @@ float accurateAlt(){
   return alt_gem;
 }
 
+void deploy(){
+  release.write(0);
+}
+
 void setup() {
   Serial.begin(9600);
 
   pinMode(11, OUTPUT);
+  release.attach(10);
+  release.write(0);
 
   while ( !Serial ) delay(100);   // wait for native usb
   Serial.println(F("BMP280 test"));
@@ -57,8 +66,9 @@ void loop() {
   if (dalt > 0){
     Serial.println("parachute deploy!");
     digitalWrite(11, HIGH);
-  }else{digitalWrite(11, LOW);}
-  delay(20);
+    deploy();
+  }else{digitalWrite(11, LOW); release.write(150);}
+  delay(1000);
 }
 
 

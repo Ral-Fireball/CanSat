@@ -6,6 +6,30 @@
 
 Adafruit_BMP280 bmp; // I2C
 
+/*gebruikte pins:
+1 - hardware serial (+ radio) rx radio
+2 - hardware serial (+ radio) tx radio
+3 - tx gps
+4 - rx gps
+5 -
+6 - 
+7 - LED PM sensor
+8 - 
+9 - 
+10 - servo
+11 - momenteel satus led
+12 - 
+13 - ingebouwde arduino led
+A0 - CO
+A1 - NO2
+A2 - NH3
+A3 - O3 measure
+A4 - SDA
+A5 - !!!SCL - 
+A6 - measure PM
+A7
+*/
+
 static const int RXPin = 4, TXPin = 3;
 static const uint32_t GPSBaud = 9600;
 
@@ -27,7 +51,7 @@ float CO;
 float NH3;
 float NO2;  // variabelen voor de gas sensor
 
-int measurePin = A5; //de zwarte kabel moet in A5
+int measurePin = A6; //de zwarte kabel moet in A5
 int ledPower = 7; //witte kabel moet in gpio ... (in dit geval 7)
 float voMeasured = 0;
 float calcVoltage = 0;
@@ -140,7 +164,7 @@ void setup() {
 
   pinMode(ledPower, OUTPUT);  // pin voor PM sensor
 
-  pinMode(A0, INPUT);
+  pinMode(O3_pin, INPUT);
   pinMode(7, INPUT);  // pin voor ozon
 
   radio.begin(9600);  // start de radio!
