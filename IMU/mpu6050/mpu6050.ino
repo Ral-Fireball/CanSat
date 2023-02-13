@@ -7,8 +7,13 @@ float roll, pitch, yaw;
 float AccErrorX, AccErrorY, GyroErrorX, GyroErrorY, GyroErrorZ;
 float elapsedTime, currentTime, previousTime;
 int c = 0;
+
+float totalA(float x, float y, float z){
+  return sqrt(sq(x)+sq(y)+sq(z));
+}
+
 void setup() {
-  Serial.begin(19200);
+  Serial.begin(9600);
   Wire.begin();                      // Initialize comunication
   Wire.beginTransmission(MPU);       // Start communication with MPU6050 // MPU=0x68
   Wire.write(0x6B);                  // Talk to the register 6B
