@@ -20,8 +20,8 @@ Servo release;
 5 -
 6 - 
 7 - LED PM sensor
-8 - 
-9 - 
+8 - rx radio
+9 -  tx radio
 10 - servo
 11 - momenteel satus led
 12 - 
