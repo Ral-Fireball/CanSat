@@ -1,10 +1,12 @@
 #include<SoftwareSerial.h>
-SoftwareSerial SUART(2, 3); //SRX = DPin-2; STX = DPin-3
+SoftwareSerial SUART(10, 11); //SRX = DPin-2; STX = DPin-3
 
 void setup()
 {
   Serial.begin(9600);
   SUART.begin(9600);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
 }
 
 void loop(){

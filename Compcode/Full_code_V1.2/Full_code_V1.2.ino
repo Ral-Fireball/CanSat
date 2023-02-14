@@ -1,10 +1,16 @@
 #include <Adafruit_BMP280.h>  // voor de barometer
+#include <Adafruit_MPU6050.h> //voor MPU6050
+#include <Adafruit_Sensor.h> //voor MPU6050
 #include <Wire.h>  // voor basicly alles, komt uit barometer
 #include <SPI.h>  // barometer
 #include <SoftwareSerial.h>  // komt uit gps
 #include <TinyGPS++.h>  // voor gps
+#include <Servo.h> //voor servo
 
 Adafruit_BMP280 bmp; // I2C
+Adafruit_MPU6050 mpu; //I2C
+
+Servo release;
 
 /*gebruikte pins:
 1 - hardware serial (+ radio) rx radio
@@ -14,8 +20,8 @@ Adafruit_BMP280 bmp; // I2C
 5 -
 6 - 
 7 - LED PM sensor
-8 - 
-9 - 
+8 - rx radio
+9 -  tx radio
 10 - servo
 11 - momenteel satus led
 12 - 
@@ -39,6 +45,11 @@ const float max_analog_steps = 1023.0;  // constantes voor analoge inputs
 float temp;
 float press;
 float alt;  // variablen voor gemeten waarde barometer
+
+float xacc; //variabelen voor de IMU
+float yacc;
+float zacc;
+float totalAcceleration;
 
 double lat;
 double lng;
@@ -104,6 +115,29 @@ void readSensors(){
   NH3 = analogRead(A1) * (max_volts / max_analog_steps);
   NO2 = analogRead(A2) * (max_volts / max_analog_steps);
 
+	sensors_event_t a, g, temp;
+	mpu.getEvent(&a, &g, &temp);
+
+  xacc = a.acceleration.x;
+  yacc = a.acceleration.y;
+  zacc = a.acceleration.z;
+  totalAcceleration = sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y + a.acceleration.z * a.acceleration.z);
+  Serial.print("xacc: ");
+  Serial.println(xacc);
+  Serial.print("yacc: ");
+  Serial.println(yacc);
+  Serial.print("zacc: ");
+  Serial.println(zacc);
+  Serial.print("Total Acceleration: ");
+  Serial.println(totalAcceleration);
+  if (totalAcceleration < 8) {
+    Serial.println("Deploying parachute!");
+    release.write(0);
+    digitalWrite(13, HIGH);
+    delay(1000);
+  }  else {
+    release.write(150);
+  }
   digitalWrite(ledPower,LOW);  // vanaf hier pm
   delayMicroseconds(280);
 
@@ -166,7 +200,8 @@ void setup() {
 
   pinMode(O3_pin, INPUT);
   pinMode(7, INPUT);  // pin voor ozon
-
+  release.attach(10);
+  release.write(150);
   radio.begin(9600);  // start de radio!
   ss.begin(GPSBaud);  // om te communiceren met GPS
 
@@ -193,6 +228,15 @@ void setup() {
                   Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
                   Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+	if (!mpu.begin()) {
+		Serial.println("Failed to find MPU6050 chip");
+		while (1) {
+		  delay(10);
+		}
+	}
+	Serial.println("MPU6050 Found!");
+  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);    
   
 }
 bool checkAlt(){
