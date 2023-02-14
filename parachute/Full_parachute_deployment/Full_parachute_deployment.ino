@@ -31,8 +31,9 @@ void setup(void) {
 
   pinMode(13, OUTPUT);
   release.attach(10);
+  release.write(0);
   delay(1000);
-  // wait for native usb
+  release.write(150);
   Serial.println(F("BMP280 test"));
   unsigned status;
   status = bmp.begin(0x76);
@@ -40,8 +41,7 @@ void setup(void) {
     Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
                       "try a different address!"));
     Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(),16);
-    while(1){delay(1);}
-  }
+    }
   /* Default settings from datasheet. */
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                   Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
@@ -63,7 +63,6 @@ void setup(void) {
 	mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
 	// set filter bandwidth to 21 Hz
 	mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-  release.write(150);
 	delay(100);
 }
 
@@ -94,12 +93,13 @@ void loop() {
   new_alt = bmp.readAltitude(1013.25);
   dalt = last_alt - new_alt;
 
-  if (totalAcceleration < 2 & dalt > -0.3) {
+  if (totalAcceleration < 3 & dalt > -0.3){
     //Serial.println("Deploying parachute!");
     digitalWrite(13, HIGH);
-    deploy();
+    release.write(0);
   }else{
     digitalWrite(13, LOW);
     }
+  Serial.println(totalAcceleration);
 	delay(50);
 }
